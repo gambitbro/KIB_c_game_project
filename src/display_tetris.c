@@ -1,17 +1,18 @@
 #include "display_tetris.h"
 
+
 void display_tetris()
 {
     system("clear");
     printf("Next Block\n");
     for(int i = 0; i < 4; ++i){
         for(int j = 0; j < 4; ++j){
-            if (block[i][j] == 0){
+            if (block[block_state][i][j] == 0){
                 printf("o ");
             }else{
                 printf("* ");
             }
-            printf("\t");        // 탭추가
+            
         }
         printf("\n");
     }
@@ -29,7 +30,7 @@ void display_tetris()
             }else if (tetris_table[j][i] == 1){
                 printf("*");
             }
-            printf("\t"); // 탭 추가
+            
         }
         printf("\n");
     }
