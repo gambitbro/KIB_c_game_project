@@ -1,5 +1,6 @@
 #include "display_tetris.h"
 
+extern int block_state = 0;
 
 void display_tetris()
 {

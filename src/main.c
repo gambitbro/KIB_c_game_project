@@ -24,6 +24,7 @@ int main(void)
     switch (menu){
         case 1: //gamestart
             printf("1. Game Start\n");
+            init_tetris_table();
             game = GAME_START;
             menu = game_start();
             break;
@@ -53,8 +54,8 @@ int game_start()
     timer.it_interval.tv_usec = 16667;
     setitimer(ITIMER_VIRTUAL, &timer, NULL);
 
-    if(game == GAME_START){
-        while(1){
+    while(1){
+        if(game == GAME_END){
             x = 3;
             y = 0;
             point = 0;
@@ -63,4 +64,26 @@ int game_start()
         }
     }
     game = GAME_END;
+}
+
+int init_tetris_table()
+{
+    int i, j;
+    //모든 데이터에 0을 넣는다
+    for(i=0; i<21; ++i){
+        for(j=0; j<10; ++j){
+            tetris_table[i][j] = 0;
+        }
+    }
+    //맨 아래칸에 1 추가
+    for(j=1; j<9; ++j){
+        tetris_table[20][j] = 1;
+    }
+    //양 옆에 1 추가 (벽)
+    for(i=0; i<21; ++i){
+        tetris_table[i][0] = 1;
+        tetris_table[i][9] = 1;
+    }
+
+
 }
