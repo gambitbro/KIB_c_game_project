@@ -85,5 +85,4 @@ int init_tetris_table()
         tetris_table[i][9] = 1;
     }
 
-
 }
