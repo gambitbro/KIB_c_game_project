@@ -2,17 +2,16 @@
 #include <time.h>
 #include <stdlib.h>
 
-extern int x;       //extern을 사용하여 main에서 선언한 변수를 여기서도 쓰겠다
+extern int x;
 extern int y;
 int block_state = 0;
 extern int block[4][4][4];
 extern int point;
 extern int tetris_table[21][10];
+int block_number;
+int next_block_number;
 char getch();
 extern int game;
-#define GAME_START 0
-#define GAME_END 1
-
 int i_block[4][4][4] =
     {
         {{1, 1, 1, 1},
@@ -146,97 +145,125 @@ int o_block[4][4][4] =
          {0, 0, 0, 0},
          {0, 0, 0, 0}}};
 
-//#define DONW 0
-//#define LEFT 1
-//#define RIGHT 2
-//#define ROTATE 3
+#define GAME_START 0
+#define GAME_END 1
 
-typedef enum{
+typedef enum
+{
     DOWN,
     LEFT,
     RIGHT,
     ROTATE
 } COMMAND;
-
-
 int update(int signum)
 {
-   
     static int downcount = 0;
     static int setcount = 0;
     static long speedcount = 0;
     static int countrange = 5;
     static int firststart = 0;
+
     char ch;
-    
+
     srand((unsigned)time(NULL));
-    if(firststart == 0){
+
+    if (firststart == 0)
+    {
         block_number = rand() % 7;
-        if(firststart == 0){
-            firststart = 1;
-        }
+        if (firststart == 0)
+            firststart++;
     }
 
     display_tetris();
+    check_one_line();
 
-     //down count setting
-    if(downcount == countrange - 1){
+    if (downcount == countrange - 1)
+    {
         point += 1;
         move_block(DOWN);
     }
-    if(speedcount == 499){
-        if(countrange != 1){
+
+    if (speedcount == 499)
+    {
+        if (countrange != 1)
             countrange--;
-        }
     }
+
     downcount++;
     downcount %= countrange;
     speedcount++;
     speedcount %= 500;
 
-    //new block setting
-    if(collision_test(DOWN)){
-        if(setcount == 9){
-            //block_number = next_block_number;
-            //next_block_number = rand() % 7;
+    if (x == 3 && y == 0)
+    {
+        if (collision_test(LEFT) || collision_test(RIGHT) || collision_test(DOWN) || collision_test(ROTATE))
+        {
+            printf("\n Game End! \n");
+            downcount = 0;
+            setcount = 0;
+            speedcount = 0;
+            countrange = 5;
+            firststart = 0;
+            game = GAME_END;
+        }
+    }
+
+    if (collision_test(DOWN))
+    {
+        if (setcount == 9)
+        {
+            block_number = next_block_number;
+            next_block_number = rand() % 7;
             block_state = 0;
             x = 3;
             y = 0;
         }
         setcount++;
         setcount %= 10;
-
     }
 
-    //키보드 입력 받기
     ch = getch();
-    switch(ch){
-        case 106:   // j
-            move_block(LEFT);
-            break;
-        case 107:   // k
-            move_block(DOWN);
-            break;
-        case 108:   // l
-            move_block(RIGHT);
-            break;
-        case 109:   // i
-            move_block(ROTATE);
-            break;
-        case 112:   // p
-            game = GAME_END;
-            break;
-        default:
-            break;
-    }
 
+    switch (ch)
+    {
+    case 74:
+    case 106:
+        move_block(LEFT);
+        break;
+    case 76:
+    case 108:
+        move_block(RIGHT);
+        break;
+    case 75:
+    case 107:
+        move_block(DOWN);
+        break;
+    case 73:
+    case 105:
+        move_block(ROTATE);
+        break;
+    case 65:
+    case 97:
+        drop();
+        break;
+    case 80:
+    case 112:
+        downcount = 0;
+        setcount = 0;
+        speedcount = 0;
+        countrange = 5;
+        firststart = 0;
+        game = GAME_END;
+        break;
+    default:
+        break;
+    }
     return 0;
 }
 
-
+/*이동, 회전키가 입력되면, 충돌검사후 이동시킨다*/
 int move_block(int command)
 {
-    printf("move block\n");
     int i, j;
     int newx, newy;
     int oldx, oldy;
@@ -245,121 +272,212 @@ int move_block(int command)
 
     newx = x;
     newy = y;
+
     old_block_state = block_state;
 
-    if(collision_test(command) == 0){
-        switch(command){
-            case DOWN:
-                newy++;
-                break;
-            case LEFT:
-                newx--;
-                break;
-            case RIGHT:
-                newx++;
-                break;
-            case ROTATE:
-                block_state++;
-                if(block_state > 3){
-                    block_state = 0;
-                }
-                break;
-            
+    if (collision_test(command) == 0)
+    {
+        switch (command)
+        {
+        case LEFT:
+            newx--;
+            break;
+        case RIGHT:
+            newx++;
+            break;
+        case DOWN:
+            newy++;
+            break;
+        case ROTATE:
+            block_state++;
+            block_state %= 4;
+            break;
+        }
+    }
+    else
+    {
+        return 1;
+    }
+
+    switch (block_number)
+    {
+    case 0:
+        block_pointer = &i_block;
+        break;
+    case 1:
+        block_pointer = &t_block;
+        break;
+    case 2:
+        block_pointer = &s_block;
+        break;
+    case 3:
+        block_pointer = &z_block;
+        break;
+    case 4:
+        block_pointer = &l_block;
+        break;
+    case 5:
+        block_pointer = &j_block;
+        break;
+    case 6:
+        block_pointer = &o_block;
+        break;
+    }
+
+        for (i = 0, oldy = y; i < 4; i++, oldy++)
+    {
+        for (j = 0, oldx = x; j < 4; j++, oldx++)
+        {
+            if (oldx > 0 && oldx < 9 && oldy < 20 && oldy > 0)
+                if ((*block_pointer)[old_block_state][i][j] == 1)
+                    tetris_table[oldy][oldx] = 0;
         }
     }
 
-    // 포인터가 블록 종류에 맞게 연결
-    switch(block_number){
-        case 0:
-            block_pointer = &i_block;
-            break;
-        case 1:
-            block_pointer = &t_block;
-            break;
-        case 2:
-            block_pointer = &s_block;
-            break;
-        case 3:
-            block_pointer = &z_block;
-            break;
-        case 4:
-            block_pointer = &j_block;
-            break;
-        case 5:
-            block_pointer = &o_block;
-            break;
-    }
-
-    // tetris table의 old block 제거
-    for(i = 0, oldy = y; i < 4; ++i, ++oldy){
-        for (j = 0, oldx = x; j < 4; ++j, ++oldx){
-            if(block[old_block_state][i][j] == 1){
-                tetris_table[oldy][oldx] = 0;
-            }
-        }
-    }
-
-    // tetris table 에 블럭 추가
     x = newx;
     y = newy;
-    for(i = 0, newy = y; i < 4; ++i, ++newy){
-        for(j = 0, newx = x; j < 4; ++j, ++newx){
-            if(newx > 0 && newx < 9 && newy < 20 && newy > 0){
-                tetris_table[newy][newx] = block[block_state][i][j];
-            }
+
+    for (i = 0, newy = y; i < 4; i++, newy++)
+    {
+        for (j = 0, newx = x; j < 4; j++, newx++)
+        {
+            if (newx > 0 && newx < 9 && newy < 20 && newy > 0)
+                if ((*block_pointer)[block_state][i][j] == 1)
+                    tetris_table[newy][newx] = (*block_pointer)[block_state][i][j];
         }
-        return 0;
     }
+
+    return 0;
 }
 
+/* 블록이 이동, 회전하기 전에 충돌되는 블록이나 벽이 없는지 확인하는 함수*/
 int collision_test(int command)
 {
     int i, j;
     int tempx, tempy;
     int oldx, oldy;
     int temp_block_state;
+    int(*block_pointer)[4][4][4];
     int temp_tetris_table[21][10];
 
-    //daisy chain
     oldx = tempx = x;
     oldy = tempy = y;
     temp_block_state = block_state;
 
-    
-    switch(command){
-        case DOWN:
-            tempy++;
-            break;
-        case LEFT:
-            tempx--;
-            break;
-        case RIGHT:
-            tempx++;
-            break;
-        case ROTATE:
-            temp_block_state++;
-            if(temp_block_state > 3){
-                temp_block_state = 0;
-            }
-            break;
-        
+    switch (command)
+    {
+    case LEFT:
+        tempx--;
+        break;
+    case RIGHT:
+        tempx++;
+        break;
+    case DOWN:
+        tempy++;
+        break;
+    case ROTATE:
+        temp_block_state++;
+        temp_block_state %= 4;
+        break;
     }
 
-    //tetris_table을 temp_tetris_table로 복사
-    for(i = 0; i < 21; ++i){
-        for(j = 0; j < 10; ++j){
+    switch (block_number)
+    {
+    case 0:
+        block_pointer = &i_block;
+        break;
+    case 1:
+        block_pointer = &t_block;
+        break;
+    case 2:
+        block_pointer = &s_block;
+        break;
+    case 3:
+        block_pointer = &z_block;
+        break;
+    case 4:
+        block_pointer = &l_block;
+        break;
+    case 5:
+        block_pointer = &j_block;
+        break;
+    case 6:
+        block_pointer = &o_block;
+        break;
+    }
+
+    for (i = 0; i < 21; i++)
+    {
+        for (j = 0; j < 10; j++)
+        {
             temp_tetris_table[i][j] = tetris_table[i][j];
         }
     }
 
-    //collision check
-    for(i = 0; i < 4; ++i){
-        for(j = 0; j < 4; ++j){
-            if(temp_tetris_table[temp+i][temp+j] == 1 && block[temp_block_state][i][j] == 1){
-                return 1;
+    for (i = 0, oldy = y; i < 4; i++, oldy++)
+    {
+        for (j = 0, oldx = x; j < 4; j++, oldx++)
+        {
+            if (oldx > 0 && oldx < 9 && oldy < 20 && oldy > 0)
+            {
+                if ((*block_pointer)[block_state][i][j] == 1)
+                    temp_tetris_table[oldy][oldx] = 0;
             }
         }
     }
-    return 0;
 
+    for (i = 0; i < 4; i++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+
+            if (temp_tetris_table[tempy + i][tempx + j] == 1 && (*block_pointer)[temp_block_state][i][j] == 1)
+                return 1;
+        }
+    }
+
+    return 0;
+}
+
+/* 충돌되기 전까지 블록을 다운시킨다.*/
+int drop(void)
+{
+    while (!collision_test(DOWN))
+        move_block(DOWN);
+
+    return 0;
+}
+
+/* 한줄이 완성되었는지 확인하는 함수. 완성되면 한줄을 지우고, 점수에 1000점을 더한다*/
+int check_one_line(void)
+{
+    int i, j;
+    int ti, tj;
+    int line_hole;
+
+    for (i = 19; i > 0; i--)
+    {
+        line_hole = 0;
+        for (j = 1; j < 9; j++)
+        {
+            if (tetris_table[i][j] == 0)
+            {
+                line_hole = 1;
+            }
+        }
+
+        if (line_hole == 0)
+        {
+            point += 1000;
+            for (ti = i; ti > 0; ti--)
+            {
+                for (tj = 0; tj < 9; tj++)
+                {
+                    tetris_table[ti][tj] = tetris_table[ti - 1][tj];
+                }
+            }
+        }
+    }
+
+    return 0;
 }
