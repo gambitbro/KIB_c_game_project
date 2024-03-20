@@ -7,7 +7,7 @@ int display_menu()
 
     system("clear");
 
-    printf("Tetris csk\n");
+    printf("Tetris mbg\n");
     printf("-------------------\n");
     printf("\t\tGAME MENU\n");
     printf("-------------------\n");
