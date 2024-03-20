@@ -45,9 +45,9 @@ void display_tetris()
         for (j = 0; j < 4; j++)
         {
             if ((*block_pointer)[0][i][j] == 1)
-                printf("* ");
+                printf("■ ");
             else if ((*block_pointer)[0][i][j] == 0)
-                printf("o ");
+                printf("□ ");
         }
     }
     printf("\n\n");
@@ -66,9 +66,9 @@ void display_tetris()
                 printf("──");
             }
             else if (tetris_table[i][j] == 1)
-                printf("* ");
+                printf("■ ");
             else if (tetris_table[i][j] == 0)
-                printf("0 ");
+                printf("□ ");
         }
         printf("\n");
     }
