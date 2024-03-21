@@ -36,7 +36,7 @@ void display_tetris()
     case 6:
         block_pointer = &o_block;
         break;
-    }
+    }int signum
     system("clear");
     printf("Next Block\n");
     for (i = 0; i < 4; i++)
