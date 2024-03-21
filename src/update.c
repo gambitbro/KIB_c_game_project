@@ -476,6 +476,7 @@ int check_one_line(void)
                     tetris_table[ti][tj] = tetris_table[ti - 1][tj];
                 }
             }
+
         }
     }
 
